@@ -64,3 +64,43 @@ export async function signout() {
 	revalidatePath("/", "layout");
 	redirect("/");
 }
+
+export async function requestPasswordReset(formData: FormData) {
+	const supabase = await createClient();
+	const email = formData.get("emailReset") as string;
+	await supabase.auth.resetPasswordForEmail(email);
+	redirect("/");
+}
+
+export async function resetPassword(formData: FormData) {
+	const supabase = await createClient();
+	const password = formData.get("password") as string;
+	const confirmPassword = formData.get("confirmPassword") as string;
+
+	// Validate passwords match
+	if (password !== confirmPassword) {
+		redirect(
+			"/password-reset?error=" + encodeURIComponent("Passwords do not match")
+		);
+	}
+
+	// Validate password length
+	if (password.length < 6) {
+		redirect(
+			"/password-reset?error=" +
+				encodeURIComponent("Password must be at least 6 characters long")
+		);
+	}
+
+	const { error } = await supabase.auth.updateUser({ password });
+
+	if (error) {
+		console.error("Password update error:", error.message);
+		redirect("/password-reset?error=" + encodeURIComponent(error.message));
+	}
+
+	redirect(
+		"/?message=" +
+			encodeURIComponent("Password updated successfully! You can now log in.")
+	);
+}
