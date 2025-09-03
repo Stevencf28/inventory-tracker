@@ -18,14 +18,7 @@ export default function AuthCodeErrorPage() {
 						href="/"
 						className="block w-full p-3 bg-blue-600 text-white rounded-lg border-2 border-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 transition-colors duration-200 font-medium"
 					>
-						Back to Login
-					</Link>
-
-					<Link
-						href="/"
-						className="block w-full p-3 bg-gray-100 text-gray-700 rounded-lg border-2 border-gray-300 hover:bg-gray-200 focus:outline-none focus:ring-2 focus:ring-gray-500 focus:ring-offset-2 transition-colors duration-200 font-medium"
-					>
-						Request New Reset Link
+						Back to Homepage
 					</Link>
 				</div>
 			</div>

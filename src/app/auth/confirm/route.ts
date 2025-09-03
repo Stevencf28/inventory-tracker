@@ -11,12 +11,12 @@ export async function GET(request: NextRequest) {
 		const supabase = await createClient();
 
 		const { error } = await supabase.auth.verifyOtp({
-			type: type as "recovery" | "email" | "email_change",
+			type: type as "recovery",
 			token_hash,
 		});
 
 		if (!error) {
-			// Redirect to the password reset page or dashboard
+			// Redirect to the password reset page
 			const redirectUrl = type === "recovery" ? "/password-reset" : next;
 			return NextResponse.redirect(`${requestUrl.origin}${redirectUrl}`);
 		}

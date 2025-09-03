@@ -91,7 +91,7 @@ export async function resetPassword(formData: FormData) {
 	}
 
 	redirect(
-		"/?success=" +
-			encodeURIComponent("Password updated successfully! You can now log in.")
+		"/dashboard/?success=" +
+			encodeURIComponent("Password updated successfully!")
 	);
 }

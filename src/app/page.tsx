@@ -13,10 +13,10 @@ import {
 	TabPanel,
 	TabPanels,
 } from "@headlessui/react";
+import SuccessPopup from "./components/success-popup";
 
 export default function Home() {
 	const [activeTab, setActiveTab] = useState<"login" | "signup">("login");
-	const [success, setSuccess] = useState("");
 	const [error, setError] = useState("");
 	const [password, setPassword] = useState("");
 	const [confirmPassword, setConfirmPassword] = useState("");
@@ -27,10 +27,6 @@ export default function Home() {
 
 	useEffect(() => {
 		const errorParam = searchParams.get("error");
-		const successParam = searchParams.get("success");
-		if (successParam) {
-			setSuccess(decodeURIComponent(successParam));
-		}
 		if (errorParam) {
 			setError(decodeURIComponent(errorParam));
 		}
@@ -272,12 +268,7 @@ export default function Home() {
 				</div>
 			</Dialog>
 
-			{/* Success Message */}
-			{success && (
-				<div className="fixed top-0 mx-auto mt-4 p-3 bg-green-100 border border-green-400 text-green-700 rounded">
-					{success}
-				</div>
-			)}
+			<SuccessPopup />
 		</main>
 	);
 }
