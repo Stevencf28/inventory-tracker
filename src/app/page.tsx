@@ -16,8 +16,8 @@ import {
 
 export default function Home() {
 	const [activeTab, setActiveTab] = useState<"login" | "signup">("login");
+	const [success, setSuccess] = useState("");
 	const [error, setError] = useState("");
-	const [message, setMessage] = useState("");
 	const [password, setPassword] = useState("");
 	const [confirmPassword, setConfirmPassword] = useState("");
 	const [passwordError, setPasswordError] = useState("");
@@ -27,12 +27,12 @@ export default function Home() {
 
 	useEffect(() => {
 		const errorParam = searchParams.get("error");
-		const messageParam = searchParams.get("message");
+		const successParam = searchParams.get("success");
+		if (successParam) {
+			setSuccess(decodeURIComponent(successParam));
+		}
 		if (errorParam) {
 			setError(decodeURIComponent(errorParam));
-		}
-		if (messageParam) {
-			setMessage(decodeURIComponent(messageParam));
 		}
 	}, [searchParams]);
 
@@ -110,13 +110,6 @@ export default function Home() {
 							{error && (
 								<div className="mb-4 p-3 bg-red-100 border border-red-400 text-red-700 rounded">
 									{error}
-								</div>
-							)}
-
-							{/* Success Message */}
-							{message && (
-								<div className="mb-4 p-3 bg-green-100 border border-green-400 text-green-700 rounded">
-									{message}
 								</div>
 							)}
 
@@ -278,6 +271,13 @@ export default function Home() {
 					</DialogPanel>
 				</div>
 			</Dialog>
+
+			{/* Success Message */}
+			{success && (
+				<div className="fixed top-0 mx-auto mt-4 p-3 bg-green-100 border border-green-400 text-green-700 rounded">
+					{success}
+				</div>
+			)}
 		</main>
 	);
 }

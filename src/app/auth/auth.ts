@@ -30,12 +30,14 @@ export async function signup(formData: FormData) {
 	const supabase = await createClient();
 	// type-casting here for convenience
 	// in practice, you should validate your inputs
+	let name = formData.get("username") as string;
+	name = name.charAt(0).toUpperCase() + name.slice(1);
 	const data = {
 		email: formData.get("email") as string,
 		password: formData.get("password") as string,
 		options: {
 			data: {
-				display_name: formData.get("username") as string,
+				display_name: name,
 			},
 		},
 	};
@@ -69,28 +71,17 @@ export async function requestPasswordReset(formData: FormData) {
 	const supabase = await createClient();
 	const email = formData.get("emailReset") as string;
 	await supabase.auth.resetPasswordForEmail(email);
-	redirect("/");
+	redirect(
+		"/?success=" +
+			encodeURIComponent(
+				"Password reset instructions has been sent to the email."
+			)
+	);
 }
 
 export async function resetPassword(formData: FormData) {
 	const supabase = await createClient();
 	const password = formData.get("password") as string;
-	const confirmPassword = formData.get("confirmPassword") as string;
-
-	// Validate passwords match
-	if (password !== confirmPassword) {
-		redirect(
-			"/password-reset?error=" + encodeURIComponent("Passwords do not match")
-		);
-	}
-
-	// Validate password length
-	if (password.length < 6) {
-		redirect(
-			"/password-reset?error=" +
-				encodeURIComponent("Password must be at least 6 characters long")
-		);
-	}
 
 	const { error } = await supabase.auth.updateUser({ password });
 
@@ -100,7 +91,7 @@ export async function resetPassword(formData: FormData) {
 	}
 
 	redirect(
-		"/?message=" +
+		"/?success=" +
 			encodeURIComponent("Password updated successfully! You can now log in.")
 	);
 }
