@@ -17,7 +17,7 @@ export default async function DashboardLayout({
 	return (
 		<div className="flex flex-row w-full">
 			<Nav userName={userName} />
-			<main className="w-full">
+			<main className="w-full px-4 py-2">
 				{children}
 				<SuccessPopup />
 			</main>

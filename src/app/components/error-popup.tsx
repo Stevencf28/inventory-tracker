@@ -1,15 +1,15 @@
+// src/app/components/error-popup.tsx
 "use client";
-
 import { useEffect, useState } from "react";
 
 type Props = {
-	open?: boolean;
-	message?: string;
-	autoHideMs?: number;
+	open?: boolean; // controlled
+	message?: string; // controlled
+	autoHideMs?: number; // optional
 	onClose?: () => void;
 };
 
-export default function SuccessPopup({
+export default function ErrorPopup({
 	open,
 	message,
 	autoHideMs = 4500,
@@ -25,16 +25,15 @@ export default function SuccessPopup({
 			setShow(true);
 			setIsFadingOut(false);
 
-			const fadeTimer = setTimeout(() => {
-				setIsFadingOut(true);
-			}, autoHideMs - 500);
-
+			const fadeTimer = setTimeout(
+				() => setIsFadingOut(true),
+				autoHideMs - 500
+			);
 			const hideTimer = setTimeout(() => {
 				setShow(false);
 				setIsFadingOut(false);
 				onClose?.();
 			}, autoHideMs);
-
 			return () => {
 				clearTimeout(fadeTimer);
 				clearTimeout(hideTimer);
@@ -46,11 +45,11 @@ export default function SuccessPopup({
 
 	return (
 		<div
-			className={`fixed top-0 mt-4 transform z-50 ${
+			className={`fixed top-0 mt-4 z-50 ${
 				isFadingOut ? "animate-fade-out" : "animate-fade-in"
 			}`}
 		>
-			<div className="bg-green-500 text-white px-6 py-4 rounded-lg shadow-lg border border-green-600">
+			<div className="bg-red-500 text-white px-6 py-4 rounded-lg shadow-lg border border-red-600">
 				<div className="flex items-center">
 					<p className="font-medium">{msg}</p>
 				</div>

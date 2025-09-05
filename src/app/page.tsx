@@ -1,8 +1,7 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import { login, requestPasswordReset, signup } from "./auth/auth";
-import { useSearchParams } from "next/navigation";
 import {
 	Dialog,
 	DialogPanel,
@@ -14,23 +13,28 @@ import {
 	TabPanels,
 } from "@headlessui/react";
 import SuccessPopup from "./components/success-popup";
+import ErrorPopup from "./components/error-popup";
+import { useRouter } from "next/navigation";
+
+function isNextRedirectError(err: unknown): boolean {
+	if (typeof err !== "object" || err === null) return false;
+	return (
+		"digest" in err && (err as { digest?: unknown }).digest === "NEXT_REDIRECT"
+	);
+}
 
 export default function Home() {
 	const [activeTab, setActiveTab] = useState<"login" | "signup">("login");
-	const [error, setError] = useState("");
 	const [password, setPassword] = useState("");
 	const [confirmPassword, setConfirmPassword] = useState("");
 	const [passwordError, setPasswordError] = useState("");
 	const [confirmPasswordError, setConfirmPasswordError] = useState("");
 	const [openReset, setOpenReset] = useState(false);
-	const searchParams = useSearchParams();
-
-	useEffect(() => {
-		const errorParam = searchParams.get("error");
-		if (errorParam) {
-			setError(decodeURIComponent(errorParam));
-		}
-	}, [searchParams]);
+	const [successOpen, setSuccessOpen] = useState(false);
+	const [successMsg, setSuccessMsg] = useState("");
+	const [errOpen, setErrOpen] = useState(false);
+	const [errMsg, setErrMsg] = useState("");
+	const router = useRouter();
 
 	// Password validation
 	const validatePassword = (value: string) => {
@@ -66,14 +70,72 @@ export default function Home() {
 		setConfirmPasswordError(validateConfirmPassword(value));
 	};
 
+	async function handleRequestPasswordReset(formdata: FormData) {
+		try {
+			const res = await requestPasswordReset(formdata);
+			if (res) {
+				setSuccessMsg(
+					"Password reset instructions has been sent to the email."
+				);
+				setSuccessOpen(true);
+				setOpenReset(false);
+			}
+		} catch (e) {
+			setErrMsg(e instanceof Error ? e.message : "Something went wrong");
+			setErrOpen(true);
+		}
+	}
+
+	async function handleLogin(formdata: FormData) {
+		try {
+			const res = await login(formdata);
+			if (!res.status) {
+				setErrMsg(res.errorMessage ?? "Something went wrong");
+				setErrOpen(true);
+			} else {
+				router.push("/dashboard");
+			}
+		} catch (e) {
+			// Ignore Next.js redirect exceptions so success doesn't look like an error
+			if (isNextRedirectError(e)) {
+				return;
+			}
+			setErrMsg(e instanceof Error ? e.message : "Something went wrong");
+			setErrOpen(true);
+		}
+	}
+
+	async function handleSignup(formdata: FormData) {
+		try {
+			const res = await signup(formdata);
+			console.log(res.status);
+			if (!res.status) {
+				setErrMsg(res.errorMessage ?? "Something went wrong");
+				setErrOpen(true);
+				setPassword("");
+				setConfirmPassword("");
+			} else {
+				router.push("/dashboard");
+			}
+		} catch (e) {
+			// Ignore Next.js redirect exceptions so success doesn't look like an error
+			if (isNextRedirectError(e)) {
+				return;
+			}
+			setErrMsg(e instanceof Error ? e.message : "Something went wrong");
+			setErrOpen(true);
+			setPassword("");
+			setConfirmPassword("");
+		}
+	}
 	return (
 		<main className="flex justify-center items-center h-screen w-screen text-gray-800">
 			<div className="flex flex-row bg-[#E0E7FF] w-full h-full space-x-2 justify-center items-center">
 				<div className="w-full h-full flex flex-col justify-center items-end content-center px-8">
-					<h1 className="text-4xl 2xl:text-5xl text-center font-semibold mb-8">
+					<h1 className="text-3xl sm:text-4xl 2xl:text-5xl text-center font-semibold mb-8">
 						Inventory Tracker
 					</h1>
-					<p className="max-w-xs 2xl:max-w-md text-end w-full 2xl:text-3xl">
+					<p className="max-w-xs 2xl:max-w-md text-end w-full text-sm sm:text-base 2xl:text-3xl text-balance">
 						Track your inventory easily and efficiently with our Inventory
 						Tracker app.
 					</p>
@@ -102,12 +164,6 @@ export default function Home() {
 									Sign Up
 								</Tab>
 							</TabList>
-							{/* Error Message */}
-							{error && (
-								<div className="mb-4 p-3 bg-red-100 border border-red-400 text-red-700 rounded">
-									{error}
-								</div>
-							)}
 
 							{/* Tab Contents */}
 							<TabPanels className="flex justify-center items-center p-4">
@@ -123,7 +179,7 @@ export default function Home() {
 												id="email"
 												name="email"
 												placeholder="Enter your email"
-												className="border-2 border-gray-300 rounded-md px-3 py-2 xl:px-4 xl:py-3 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+												className="border-2 border-gray-300 rounded-md px-3 py-2 xl:px-4 xl:py-3 text-sm sm:text-base focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
 											/>
 											<input
 												required
@@ -131,7 +187,7 @@ export default function Home() {
 												id="password"
 												name="password"
 												placeholder="Enter your password"
-												className="border-2 border-gray-300 rounded-md px-3 py-2 xl:px-4 xl:py-3 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+												className="border-2 border-gray-300 rounded-md px-3 py-2 xl:px-4 xl:py-3 text-sm sm:text-base focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
 											/>
 										</div>
 										<button
@@ -142,8 +198,8 @@ export default function Home() {
 											Forgot Password?
 										</button>
 										<button
-											formAction={login}
-											className="w-full p-2 my-3 bg-blue-600 text-base xl:text-lg text-white rounded-lg border-2 border-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 transition-colors duration-200 font-medium"
+											formAction={handleLogin}
+											className="w-full p-2 my-3 bg-blue-600 text-sm sm:text-base xl:text-lg text-white rounded-lg border-2 border-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 transition-colors duration-200 font-medium"
 										>
 											Login
 										</button>
@@ -162,16 +218,26 @@ export default function Home() {
 												id="register-email"
 												name="email"
 												placeholder="Enter your email"
-												className="border-2 border-gray-300 rounded-md px-3 py-2 xl:px-4 xl:py-3 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+												className="border-2 border-gray-300 rounded-md px-3 py-2 xl:px-4 xl:py-3 text-sm sm:text-base focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
 											/>
-											<input
-												required
-												type="text"
-												id="username"
-												name="username"
-												placeholder="Enter your Name"
-												className="border-2 border-gray-300 rounded-md px-3 py-2 xl:px-4 xl:py-3 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-											/>
+											<div className="flex flex-col sm:flex-row gap-2">
+												<input
+													required
+													type="text"
+													id="firstName"
+													name="firstName"
+													placeholder="Enter your First Name"
+													className="border-2 border-gray-300 rounded-md py-2 px-3 xl:px-4 xl:py-3 w-full min-w-0 sm:flex-1 text-sm sm:text-base focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+												/>
+												<input
+													required
+													type="text"
+													id="lastName"
+													name="lastName"
+													placeholder="Enter your Last Name"
+													className="border-2 border-gray-300 rounded-md py-2 px-3 xl:px-4 xl:py-3 w-full min-w-0 sm:flex-1 text-sm sm:text-base focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+												/>
+											</div>
 											<input
 												required
 												type="password"
@@ -181,7 +247,7 @@ export default function Home() {
 												minLength={6}
 												value={password}
 												onChange={handlePasswordChange}
-												className={`border-2 rounded-md px-3 py-2 xl:px-4 xl:py-3 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent ${
+												className={`border-2 rounded-md px-3 py-2 xl:px-4 xl:py-3 text-sm sm:text-base focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent ${
 													passwordError ? "border-red-500" : "border-gray-300"
 												}`}
 											/>
@@ -199,7 +265,7 @@ export default function Home() {
 												placeholder="Confirm your password"
 												value={confirmPassword}
 												onChange={handleConfirmPasswordChange}
-												className={`border-2 rounded-md px-3 py-2 xl:px-4 xl:py-3 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent ${
+												className={`border-2 rounded-md px-3 py-2 xl:px-4 xl:py-3 text-sm sm:text-base focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent ${
 													confirmPasswordError
 														? "border-red-500"
 														: "border-gray-300"
@@ -212,14 +278,14 @@ export default function Home() {
 											)}
 										</div>
 										<button
-											formAction={signup}
+											formAction={handleSignup}
 											disabled={
 												!!passwordError ||
 												!!confirmPasswordError ||
 												password.length < 6 ||
 												confirmPassword.length < 6
 											}
-											className="w-full p-2 my-3 bg-green-600 text-base xl:text-lg text-white rounded-lg border-2 border-green-600 hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-green-500 focus:ring-offset-2 transition-colors duration-200 font-medium disabled:opacity-50 disabled:cursor-not-allowed"
+											className="w-full p-2 my-3 bg-green-600 text-sm sm:text-base xl:text-lg text-white rounded-lg border-2 border-green-600 hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-green-500 focus:ring-offset-2 transition-colors duration-200 font-medium disabled:opacity-50 disabled:cursor-not-allowed"
 										>
 											Create Account
 										</button>
@@ -246,7 +312,7 @@ export default function Home() {
 								id="emailReset"
 								name="emailReset"
 								placeholder="Enter your email"
-								className="w-full border-2 border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+								className="w-full border-2 border-gray-300 rounded-md px-3 py-2 text-sm sm:text-base focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
 							/>
 							<div className="flex space-x-3">
 								<button
@@ -257,7 +323,7 @@ export default function Home() {
 									Cancel
 								</button>
 								<button
-									formAction={requestPasswordReset}
+									formAction={handleRequestPasswordReset}
 									className="flex-1 px-4 py-2 text-sm font-medium text-white bg-blue-600 border border-transparent rounded-md hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500"
 								>
 									Send Reset Link
@@ -268,7 +334,16 @@ export default function Home() {
 				</div>
 			</Dialog>
 
-			<SuccessPopup />
+			<SuccessPopup
+				open={successOpen}
+				message={successMsg}
+				onClose={() => setSuccessOpen(false)}
+			/>
+			<ErrorPopup
+				open={errOpen}
+				message={errMsg}
+				onClose={() => setErrOpen(false)}
+			/>
 		</main>
 	);
 }

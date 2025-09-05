@@ -7,9 +7,6 @@ import { createClient } from "@/utils/supabase/server";
 
 export async function login(formData: FormData) {
 	const supabase = await createClient();
-
-	// type-casting here for convenience
-	// in practice, you should validate your inputs
 	const data = {
 		email: formData.get("email") as string,
 		password: formData.get("password") as string,
@@ -19,19 +16,21 @@ export async function login(formData: FormData) {
 
 	if (error) {
 		console.error("Login error:", error.message);
-		redirect("/?error=" + encodeURIComponent(error.message));
+		return { status: false, errorMessage: error.message };
 	}
-
 	revalidatePath("/", "layout");
-	redirect("/dashboard");
+	return { status: true };
 }
 
 export async function signup(formData: FormData) {
 	const supabase = await createClient();
-	// type-casting here for convenience
-	// in practice, you should validate your inputs
-	let name = formData.get("username") as string;
-	name = name.charAt(0).toUpperCase() + name.slice(1);
+	const firstName =
+		(formData.get("firstName") as string).charAt(0).toUpperCase() +
+		(formData.get("firstName") as string).slice(1);
+	const lastName =
+		(formData.get("lastName") as string).charAt(0).toUpperCase() +
+		(formData.get("lastName") as string).slice(1);
+	const name = firstName + " " + lastName;
 	const data = {
 		email: formData.get("email") as string,
 		password: formData.get("password") as string,
@@ -46,11 +45,11 @@ export async function signup(formData: FormData) {
 
 	if (error) {
 		console.error("Signup error:", error.message);
-		redirect("/?error=" + encodeURIComponent(error.message));
+		return { status: false, errorMessage: error.message };
 	}
-
+	console.log("signed up");
 	revalidatePath("/", "layout");
-	redirect("/dashboard");
+	return { status: true };
 }
 
 export async function signout() {
@@ -70,13 +69,12 @@ export async function signout() {
 export async function requestPasswordReset(formData: FormData) {
 	const supabase = await createClient();
 	const email = formData.get("emailReset") as string;
-	await supabase.auth.resetPasswordForEmail(email);
-	redirect(
-		"/?success=" +
-			encodeURIComponent(
-				"Password reset instructions has been sent to the email."
-			)
-	);
+	const req = await supabase.auth.resetPasswordForEmail(email);
+	if (req.error) {
+		console.error("Password reset error:", req.error.message);
+		return false;
+	}
+	return true;
 }
 
 export async function resetPassword(formData: FormData) {
