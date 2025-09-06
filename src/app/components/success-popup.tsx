@@ -46,7 +46,7 @@ export default function SuccessPopup({
 
 	return (
 		<div
-			className={`fixed top-0 mt-4 transform z-50 ${
+			className={`fixed top-4 left-1/2 -translate-x-1/2 transform z-50 ${
 				isFadingOut ? "animate-fade-out" : "animate-fade-in"
 			}`}
 		>
