@@ -7,14 +7,17 @@ export async function getCategory() {
 	//get user id
 	const { data: user, error: userError } = await supabase.auth.getUser();
 	if (userError) {
-		return [];
+		return null;
 	}
+
 	const { data, error } = await supabase
 		.from("category")
-		.select("name")
+		.select("id, name, user_id")
 		.eq("user_id", user.user.id);
+
 	if (error) {
-		return [];
+		console.log("error: ", error);
+		return null;
 	}
 	return data;
 }

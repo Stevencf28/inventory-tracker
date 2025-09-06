@@ -15,6 +15,7 @@ import {
 import SuccessPopup from "./components/success-popup";
 import ErrorPopup from "./components/error-popup";
 import { useRouter } from "next/navigation";
+import Image from "next/image";
 
 function isNextRedirectError(err: unknown): boolean {
 	if (typeof err !== "object" || err === null) return false;
@@ -129,25 +130,34 @@ export default function Home() {
 		}
 	}
 	return (
-		<main className="flex justify-center items-center h-screen w-screen text-gray-800">
-			<div className="flex flex-row bg-[#E0E7FF] w-full h-full space-x-2 justify-center items-center">
-				<div className="w-full h-full flex flex-col justify-center items-end content-center px-8">
-					<h1 className="text-3xl sm:text-4xl 2xl:text-5xl text-center font-semibold mb-8">
+		<main className="min-w-screen min-h-screen text-gray-800 overflow-auto">
+			<div className="flex lg:flex-row flex-col max-w-screen h-full lg:h-screen lg:space-x-2 justify-center items-center">
+				{/* Logo and description */}
+				<div className="w-full h-fit lg:h-full bg-[#E0E7FF] flex flex-col justify-center items-center lg:items-end content-center lg:px-8 lg:p-0 px-4 py-8 ">
+					<Image
+						src="/logo.svg"
+						alt="Inventory Tracker"
+						width={256}
+						height={256}
+						priority
+						className="mb-8 right-0"
+					/>
+					{/* <h1 className="text-3xl sm:text-4xl 2xl:text-5xl text-center font-semibold mb-8">
 						Inventory Tracker
-					</h1>
-					<p className="max-w-xs 2xl:max-w-md text-end w-full text-sm sm:text-base 2xl:text-3xl text-balance">
+					</h1> */}
+					<p className="max-w-xs 2xl:max-w-md text-center lg:text-end w-full text-sm sm:text-base 2xl:text-3xl text-balance">
 						Track your inventory easily and efficiently with our Inventory
 						Tracker app.
 					</p>
-					<br />
 					<h6 className=" text-sm 2xl:text-lg italic">
 						Created by Steven Chen
 					</h6>
 				</div>
-				<div className="w-full h-full flex justify-start items-center content-center px-4 bg-white p-4">
+				{/* Auth container */}
+				<div className="w-full h-full flex xl:justify-start justify-center lg:items-center lg:content-center px-4  p-4 overflow-auto">
 					<div
 						id="auth-container"
-						className="flex-col w-full max-w-lg px-8 max-h-full"
+						className="w-full max-w-lg px-8 justify-center items-center"
 					>
 						{/* Tab Navigation */}
 						<TabGroup

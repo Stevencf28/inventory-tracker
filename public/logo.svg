@@ -1,0 +1,18 @@
+<svg width="114" height="37" xmlns="http://www.w3.org/2000/svg" fill="none">
+ <!-- Main box -->
+
+ <!-- Box fold lines -->
+ <!-- Checkmark indicator -->
+ <!-- Text: Inventory -->
+ <!-- Text: Tracker -->
+ <g>
+  <title>Layer 1</title>
+  <path id="svg_1" stroke-linejoin="round" stroke-width="2" stroke="#030213" fill-opacity="0.1" fill="#030213" d="m1,14.27273l12,-6l12,6l0,16l-12,6l-12,-6l0,-16z"/>
+  <path id="svg_2" stroke-linejoin="round" stroke-width="2" stroke="#030213" d="m1,14.27273l12,6l12,-6"/>
+  <path id="svg_3" stroke-width="2" stroke="#030213" d="m13,20.27273l0,16"/>
+  <circle id="svg_4" stroke-width="2" stroke="#ffffff" fill="#10b981" r="6" cy="18.27273" cx="21"/>
+  <path id="svg_5" stroke-linejoin="round" stroke-linecap="round" stroke-width="2" stroke="#ffffff" d="m18,18.27273l2,2l4,-4"/>
+  <text id="svg_6" letter-spacing="-0.025em" fill="#030213" font-weight="400" font-size="18" font-family="system-ui, -apple-system, sans-serif" y="17.27273" x="43">Inventory</text>
+  <text id="svg_7" letter-spacing="0.025em" fill="#717182" font-weight="400" font-size="16" font-family="system-ui, -apple-system, sans-serif" y="34.27273" x="43">Tracker</text>
+ </g>
+</svg>

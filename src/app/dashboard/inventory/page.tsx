@@ -11,10 +11,11 @@ import {
 	Label,
 	Select,
 } from "@headlessui/react";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { getCategory, addCategory } from "@/app/auth/data";
 import SuccessPopup from "@/app/components/success-popup";
 import ErrorPopup from "@/app/components/error-popup";
+import Category from "@/app/models";
 
 export default function Inventory() {
 	const [openPanel, setOpenPanel] = useState(false);
@@ -25,11 +26,48 @@ export default function Inventory() {
 	const [openManageCategories, setOpenManageCategories] = useState(false);
 	const [openAddProduct, setOpenAddProduct] = useState(false);
 	const [categoryName, setCategoryName] = useState("");
+	const [categories, setCategories] = useState<Category[]>([]);
+	const [loadingCategories, setLoadingCategories] = useState(false);
+
+	useEffect(() => {
+		// Preload categories when opening the page
+		getCategories();
+	}, []);
+
+	async function getCategories() {
+		try {
+			console.log("getting categories");
+			setLoadingCategories(true);
+			const res = await getCategory();
+			if (res === null) {
+				setErrMsg("Failed to get categories");
+				setErrOpen(true);
+				setLoadingCategories(false);
+				return;
+			}
+			console.log("res", res);
+			setCategories(res);
+			console.log("categories set");
+			setLoadingCategories(false);
+		} catch (e) {
+			setErrMsg(e instanceof Error ? e.message : "Something went wrong");
+			setErrOpen(true);
+			setLoadingCategories(false);
+		}
+	}
 
 	async function handleAddCategory(categoryName: string) {
 		try {
 			const res = await addCategory(categoryName);
-			if (!res) throw new Error("Failed to add category");
+			if (!res) {
+				setErrMsg("Failed to add category");
+				setErrOpen(true);
+				return;
+			}
+			setSuccessMsg("Category added successfully");
+			setSuccessOpen(true);
+			getCategories();
+			setOpenManageCategories(false);
 		} catch (e) {
 			setErrMsg(e instanceof Error ? e.message : "Something went wrong");
 			setErrOpen(true);
@@ -77,10 +115,11 @@ export default function Inventory() {
 					setOpenAddProduct(false);
 					setOpenManageCategories(false);
 				}}
-				className="relative z-50"
+				className="relative z-40"
 			>
 				<div className="fixed inset-0 bg-black/30" aria-hidden="true" />
 				<div className="fixed inset-0 flex w-screen items-center justify-center p-4">
+					{/* Add Product */}
 					{openAddProduct && (
 						<DialogPanel className="mx-auto max-w-lg w-full rounded-lg bg-white p-6">
 							<DialogTitle className="text-xl font-semibold text-gray-900 mb-4">
@@ -116,8 +155,18 @@ export default function Inventory() {
 											required
 											id="Category"
 											name="Category"
+											defaultValue=""
 											className="w-full border-2 border-gray-500 rounded-md p-1 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-										/>
+										>
+											<option value="" disabled>
+												{loadingCategories ? "Loading..." : "Select a category"}
+											</option>
+											{categories.map((c) => (
+												<option key={c.id} value={c.name}>
+													{c.name}
+												</option>
+											))}
+										</Select>
 									</Field>
 									<Field className="flex flex-col">
 										<Label className="font-medium text-md">Brand</Label>
@@ -134,6 +183,7 @@ export default function Inventory() {
 							</form>
 						</DialogPanel>
 					)}
+					{/* Manage Categories */}
 					{openManageCategories && (
 						<DialogPanel className="mx-auto max-w-lg w-full rounded-lg bg-white p-6">
 							<DialogTitle className="text-xl font-semibold text-gray-900 mb-4">
@@ -160,6 +210,32 @@ export default function Inventory() {
 								>
 									Add Category
 								</Button>
+								<div className="mt-4 overflow-x-auto">
+									<table className="min-w-full table-auto text-sm">
+										<thead className="bg-gray-50 sticky top-0">
+											<tr>
+												<th className="px-4 py-2 text-left font-medium text-gray-700">
+													Name
+												</th>
+											</tr>
+										</thead>
+										<tbody className="divide-y divide-gray-200">
+											{categories.length === 0 ? (
+												<tr>
+													<td className="px-4 py-3 text-gray-500">
+														No categories found
+													</td>
+												</tr>
+											) : (
+												categories.map((c) => (
+													<tr key={c.id}>
+														<td className="px-4 py-3">{c.name}</td>
+													</tr>
+												))
+											)}
+										</tbody>
+									</table>
+								</div>
 							</form>
 						</DialogPanel>
 					)}
