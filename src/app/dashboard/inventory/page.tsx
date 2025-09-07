@@ -18,6 +18,7 @@ import {
 	deleteCategory,
 	editCategory,
 	getInventory,
+	addProduct,
 } from "@/app/auth/data";
 import SuccessPopup from "@/app/components/success-popup";
 import ErrorPopup from "@/app/components/error-popup";
@@ -42,6 +43,7 @@ export default function InventoryPage() {
 	const [editCategoryId, setEditCategoryId] = useState("");
 	const [inventory, setInventory] = useState<Inventory[]>([]);
 	const [loadingInventory, setLoadingInventory] = useState(false);
+	const [error, setError] = useState("");
 
 	{
 		/* Categories Functions*/
@@ -166,6 +168,27 @@ export default function InventoryPage() {
 		}
 	}, []);
 
+	async function handleAddProduct(formData: FormData) {
+		console.log("Adding product");
+		try {
+			const res = await addProduct(formData);
+			if (!res) {
+				setError("Failed to add product");
+				return;
+			}
+			setSuccessMsg("Product added successfully");
+			setSuccessOpen(true);
+			setOpenAddProduct(false);
+			setOpenPanel(false);
+		} catch (e) {
+			setErrMsg(e instanceof Error ? e.message : "Something went wrong");
+			setErrOpen(true);
+		}
+	}
+
+	{
+		/* Use Effects */
+	}
 	useEffect(() => {
 		// Preload categories when opening the page
 		getCategories();
@@ -257,7 +280,12 @@ export default function InventoryPage() {
 							<DialogTitle className="text-lg font-bold text-black mb-4">
 								Add a Product
 							</DialogTitle>
-							<form>
+							{error && (
+								<div className="mb-4 p-3 bg-red-100 border border-red-400 text-red-700 rounded">
+									{error}
+								</div>
+							)}
+							<form autoComplete="off">
 								<Fieldset className="flex flex-col space-y-2">
 									<Field className="flex flex-col">
 										<Label className="font-medium text-md">Product Name</Label>
@@ -266,27 +294,16 @@ export default function InventoryPage() {
 											type="text"
 											id="name"
 											name="name"
-											placeholder="Enter the Product Name"
 											className="border-2 border-gray-500 rounded-md p-1 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
 										/>
 									</Field>
-									<Field className="flex flex-col">
-										<Label className="font-medium text-md">Brand</Label>
-										<Input
-											required
-											type="text"
-											id="brand"
-											name="brand"
-											placeholder="Enter the product's brand"
-											className="border-2 border-gray-500 rounded-md p-1 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-										/>
-									</Field>
+
 									<Field className="flex flex-col">
 										<Label className="font-medium text-md">Category</Label>
 										<Select
 											required
-											id="Category"
-											name="Category"
+											id="category"
+											name="category"
 											defaultValue=""
 											className="w-full border-2 border-gray-500 rounded-md p-1 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
 										>
@@ -307,10 +324,40 @@ export default function InventoryPage() {
 											type="text"
 											id="brand"
 											name="brand"
-											placeholder="Enter the product's brand"
 											className="border-2 border-gray-500 rounded-md p-1 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
 										/>
 									</Field>
+									<div className="flex flex-row justify-between">
+										<Field className="flex flex-col">
+											<Label className="font-medium text-md">Cost</Label>
+											<Input
+												required
+												type="number"
+												id="cost"
+												name="cost"
+												step="0.01"
+												className="border-2 border-gray-500 rounded-md p-1 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+											/>
+										</Field>
+										<Field className="flex flex-col">
+											<Label className="font-medium text-md">Quantity</Label>
+											<Input
+												required
+												type="number"
+												id="quantity"
+												name="quantity"
+												step="1"
+												className="border-2 border-gray-500 rounded-md p-1 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+											/>
+										</Field>
+									</div>
+									<Button
+										type="submit"
+										formAction={handleAddProduct}
+										className="bg-blue-500 border-2 text-white px-3 py-2 w-fit rounded-lg hover:cursor-pointer hover:bg-blue-600 transition-colors duration-200"
+									>
+										Add Product
+									</Button>
 								</Fieldset>
 							</form>
 						</DialogPanel>

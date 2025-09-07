@@ -14,4 +14,5 @@ export interface Inventory {
 	brand: string;
 	category: string;
 	created_at: string;
+	in_use: number;
 }

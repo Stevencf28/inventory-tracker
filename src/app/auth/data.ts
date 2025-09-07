@@ -16,6 +16,30 @@ export async function getInventory(user_id: string) {
 	return data;
 }
 
+export async function addProduct(formData: FormData) {
+	const supabase = await createClient();
+	const { data: user, error: userError } = await supabase.auth.getUser();
+	if (userError) {
+		return false;
+	}
+	console.log("category: ", formData.get("category"));
+	const { error } = await supabase.from("Inventory").insert({
+		name: formData.get("name"),
+		category: formData.get("category"),
+		brand: formData.get("brand"),
+		cost: formData.get("cost"),
+		quantity: formData.get("quantity"),
+		available: formData.get("quantity"),
+		user_id: user.user.id,
+		in_use: 0,
+	});
+	if (error) {
+		console.log("Failed to add product: ", error);
+		return false;
+	}
+	return true;
+}
+
 export async function getCategory() {
 	const supabase = await createClient();
 

@@ -85,7 +85,7 @@ export async function resetPassword(formData: FormData) {
 
 	if (error) {
 		console.error("Password update error:", error.message);
-		return { status: false, errorMessage: error.message } as const;
+		return { status: false, errorMessage: error.message };
 	}
 
 	return { status: true } as const;
