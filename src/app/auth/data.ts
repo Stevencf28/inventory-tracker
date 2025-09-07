@@ -35,5 +35,14 @@ export async function addCategory(name: string) {
 	if (error) {
 		return error;
 	}
-	return data;
+	return true;
+}
+
+export async function deleteCategory(id: string) {
+	const supabase = await createClient();
+	const { error } = await supabase.from("category").delete().eq("id", id);
+	if (error) {
+		return false;
+	}
+	return true;
 }
