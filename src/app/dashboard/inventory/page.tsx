@@ -41,7 +41,6 @@ export default function Inventory() {
 
 	const getCategories = useCallback(async () => {
 		try {
-			console.log("getting categories");
 			setLoadingCategories(true);
 			const res = await getCategory();
 			if (res === null) {
@@ -50,10 +49,8 @@ export default function Inventory() {
 				setLoadingCategories(false);
 				return;
 			}
-			console.log("res", res);
 			res.sort((a, b) => a.name.localeCompare(b.name));
 			setCategories(res);
-			console.log("categories set");
 			setLoadingCategories(false);
 		} catch (e) {
 			setErrMsg(e instanceof Error ? e.message : "Something went wrong");
@@ -85,7 +82,6 @@ export default function Inventory() {
 	}, [getCategories]);
 
 	async function handleAddCategory(name: string) {
-		console.log("adding category: ", name);
 		if (name.trim().length === 0) {
 			setErrMsg("Category name is required");
 			setErrOpen(true);
@@ -103,7 +99,6 @@ export default function Inventory() {
 		}
 		try {
 			const res = await addCategory(name);
-			console.log("res", res);
 			if (!res || res instanceof PostgrestError) {
 				setErrMsg("Failed to add category");
 				setErrOpen(true);
@@ -126,7 +121,6 @@ export default function Inventory() {
 				setErrOpen(true);
 				redirect("/");
 			}
-			console.log("editing category: ", id);
 			const res = await editCategory(id, name, user.user.id);
 			if (!res) {
 				setErrMsg("Failed to edit category");
@@ -144,7 +138,6 @@ export default function Inventory() {
 
 	async function handleDeleteCategory(id: string) {
 		try {
-			console.log("deleting category: ", id);
 			const res = await deleteCategory(id);
 			if (!res) {
 				setErrMsg("Failed to delete category");
@@ -318,6 +311,11 @@ export default function Inventory() {
 										</tr>
 									</thead>
 									<tbody className="divide-y divide-gray-200">
+										{loadingCategories && (
+											<tr>
+												<td className="px-4 py-3 text-gray-500">Loading...</td>
+											</tr>
+										)}
 										{categories.length === 0 ? (
 											<tr>
 												<td className="px-4 py-3 text-gray-500">
@@ -328,7 +326,7 @@ export default function Inventory() {
 											categories.map((c) => (
 												<tr key={c.id}>
 													<td className="px-4 py-3">{c.name}</td>
-													<td className="px-4 py-3">
+													<td className="px-4 py-3 flex flex-row space-x-2">
 														<Button
 															onClick={() => {
 																setOpenEditCategory(true);
@@ -339,8 +337,6 @@ export default function Inventory() {
 														>
 															Edit
 														</Button>
-													</td>
-													<td className="px-4 py-3">
 														<Button
 															onClick={() => handleDeleteCategory(c.id)}
 															className="bg-red-500 border-2 text-white px-3 py-1 w-fit rounded-lg hover:cursor-pointer hover:bg-red-600 transition-colors duration-200"
