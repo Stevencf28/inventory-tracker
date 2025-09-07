@@ -29,7 +29,7 @@ export async function addCategory(name: string) {
 	if (userError) {
 		return false;
 	}
-	const { data, error } = await supabase
+	const { error } = await supabase
 		.from("category")
 		.insert({ name, user_id: user.user.id });
 	if (error) {
@@ -41,6 +41,19 @@ export async function addCategory(name: string) {
 export async function deleteCategory(id: string) {
 	const supabase = await createClient();
 	const { error } = await supabase.from("category").delete().eq("id", id);
+	if (error) {
+		return false;
+	}
+	return true;
+}
+
+export async function editCategory(id: string, name: string, user_id: string) {
+	const supabase = await createClient();
+	const { error } = await supabase
+		.from("category")
+		.update({ name })
+		.eq("id", id)
+		.eq("user_id", user_id);
 	if (error) {
 		return false;
 	}

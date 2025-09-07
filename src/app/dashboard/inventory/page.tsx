@@ -12,12 +12,18 @@ import {
 	Select,
 } from "@headlessui/react";
 import { useEffect, useState, useCallback } from "react";
-import { getCategory, addCategory, deleteCategory } from "@/app/auth/data";
+import {
+	getCategory,
+	addCategory,
+	deleteCategory,
+	editCategory,
+} from "@/app/auth/data";
 import SuccessPopup from "@/app/components/success-popup";
 import ErrorPopup from "@/app/components/error-popup";
 import Category from "@/app/models";
 import { createClient as createSupabaseClient } from "@/utils/supabase/client";
 import { PostgrestError } from "@supabase/supabase-js";
+import { redirect } from "next/navigation";
 
 export default function Inventory() {
 	const [openPanel, setOpenPanel] = useState(false);
@@ -29,6 +35,9 @@ export default function Inventory() {
 	const [openAddProduct, setOpenAddProduct] = useState(false);
 	const [categories, setCategories] = useState<Category[]>([]);
 	const [loadingCategories, setLoadingCategories] = useState(false);
+	const [openEditCategory, setOpenEditCategory] = useState(false);
+	const [editCategoryName, setEditCategoryName] = useState("");
+	const [editCategoryId, setEditCategoryId] = useState("");
 
 	const getCategories = useCallback(async () => {
 		try {
@@ -42,6 +51,7 @@ export default function Inventory() {
 				return;
 			}
 			console.log("res", res);
+			res.sort((a, b) => a.name.localeCompare(b.name));
 			setCategories(res);
 			console.log("categories set");
 			setLoadingCategories(false);
@@ -107,22 +117,30 @@ export default function Inventory() {
 		}
 	}
 
-	// async function handleEditCategory(id: string, name: string) {
-	// 	try{
-	// 		console.log("editing category", id);
-	// 		const res = await editCategory(id, name);
-	// 		if (!res) {
-	// 			setErrMsg("Failed to edit category");
-	// 			setErrOpen(true);
-	// 			return;
-	// 		}
-	// 		setSuccessMsg("Category edited successfully");
-	// 		setSuccessOpen(true);
-	// 	} catch (e) {
-	// 		setErrMsg(e instanceof Error ? e.message : "Something went wrong");
-	// 		setErrOpen(true);
-	// 	}
-	// }
+	async function handleEditCategory(id: string, name: string) {
+		try {
+			const supabase = await createSupabaseClient();
+			const { data: user, error: userError } = await supabase.auth.getUser();
+			if (userError) {
+				setErrMsg("Failed to get user");
+				setErrOpen(true);
+				redirect("/");
+			}
+			console.log("editing category: ", id);
+			const res = await editCategory(id, name, user.user.id);
+			if (!res) {
+				setErrMsg("Failed to edit category");
+				setErrOpen(true);
+				return;
+			}
+			setSuccessMsg("Category edited successfully");
+			setSuccessOpen(true);
+			setOpenEditCategory(false);
+		} catch (e) {
+			setErrMsg(e instanceof Error ? e.message : "Something went wrong");
+			setErrOpen(true);
+		}
+	}
 
 	async function handleDeleteCategory(id: string) {
 		try {
@@ -311,7 +329,14 @@ export default function Inventory() {
 												<tr key={c.id}>
 													<td className="px-4 py-3">{c.name}</td>
 													<td className="px-4 py-3">
-														<Button className="bg-yellow-500 border-2 text-white px-3 py-1 w-fit rounded-lg hover:cursor-pointer hover:bg-red-600 transition-colors duration-200">
+														<Button
+															onClick={() => {
+																setOpenEditCategory(true);
+																setEditCategoryName(c.name);
+																setEditCategoryId(c.id);
+															}}
+															className="bg-yellow-500 border-2 text-white px-3 py-1 w-fit rounded-lg hover:cursor-pointer hover:bg-red-600 transition-colors duration-200"
+														>
 															Edit
 														</Button>
 													</td>
@@ -341,6 +366,49 @@ export default function Inventory() {
 				</table>
 			</div>
 
+			{/* Edit Category Dialog */}
+			<Dialog
+				open={openEditCategory}
+				onClose={setOpenEditCategory}
+				className="relative z-50"
+			>
+				<div className="fixed inset-0 bg-black/30" aria-hidden="true" />
+				<div className="fixed inset-0 flex w-screen items-center justify-center p-4">
+					<DialogPanel className="mx-auto max-w-lg w-full rounded-lg bg-white p-6">
+						<DialogTitle className="text-xl font-semibold text-gray-900 mb-4">
+							Edit Category
+						</DialogTitle>
+						<form>
+							<Fieldset className="flex flex-col space-y-2">
+								<Field className="flex flex-col">
+									<Label className="font-medium text-md">Category Name</Label>
+									<Input
+										required
+										type="text"
+										id="name"
+										name="name"
+										value={editCategoryName}
+										onChange={(e) => setEditCategoryName(e.target.value)}
+										placeholder="Enter the Category Name"
+										className="border-2 border-gray-500 rounded-md p-1 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+									/>
+								</Field>
+								<Button
+									type="button"
+									onClick={() =>
+										handleEditCategory(editCategoryId, editCategoryName)
+									}
+									className="bg-blue-500 border-2 text-white px-3 py-1 w-fit rounded-lg hover:cursor-pointer hover:bg-blue-600 transition-colors duration-200"
+								>
+									Edit Category
+								</Button>
+							</Fieldset>
+						</form>
+					</DialogPanel>
+				</div>
+			</Dialog>
+
+			{/* Success Popup */}
 			<SuccessPopup
 				open={successOpen}
 				message={successMsg}
