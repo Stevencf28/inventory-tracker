@@ -1,8 +1,8 @@
 "use client";
 
-import { useSearchParams } from "next/navigation";
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import { resetPassword } from "../auth/auth";
+import { redirect } from "next/navigation";
 
 export default function PasswordReset() {
 	const [error, setError] = useState("");
@@ -10,14 +10,6 @@ export default function PasswordReset() {
 	const [confirmPassword, setConfirmPassword] = useState("");
 	const [passwordError, setPasswordError] = useState("");
 	const [confirmPasswordError, setConfirmPasswordError] = useState("");
-	const searchParams = useSearchParams();
-
-	useEffect(() => {
-		const errorParam = searchParams.get("error");
-		if (errorParam) {
-			setError(decodeURIComponent(errorParam));
-		}
-	}, [searchParams]);
 
 	// Password validation
 	const validatePassword = (value: string) => {
@@ -52,20 +44,28 @@ export default function PasswordReset() {
 		setConfirmPassword(value);
 		setConfirmPasswordError(validateConfirmPassword(value));
 	};
+
+	async function handleResetPassword(formData: FormData) {
+		const result = await resetPassword(formData);
+		if (result.status) {
+			redirect("/dashboard");
+		} else {
+			setError(result.errorMessage);
+		}
+	}
+
 	return (
 		<main className="flex justify-center items-center h-screen w-screen text-gray-800">
 			<div className="w-full max-w-md bg-white p-8 rounded-lg shadow-lg">
 				<h1 className="text-2xl font-semibold text-center mb-6">
 					Reset Your Password
 				</h1>
-
 				{error && (
 					<div className="mb-4 p-3 bg-red-100 border border-red-400 text-red-700 rounded">
 						{error}
 					</div>
 				)}
-
-				<form action={resetPassword} className="space-y-4">
+				<form action={handleResetPassword} className="space-y-4">
 					<div>
 						<input
 							required
