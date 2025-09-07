@@ -17,15 +17,17 @@ import {
 	addCategory,
 	deleteCategory,
 	editCategory,
+	getInventory,
 } from "@/app/auth/data";
 import SuccessPopup from "@/app/components/success-popup";
 import ErrorPopup from "@/app/components/error-popup";
 import Category from "@/app/models";
+import Inventory from "@/app/models";
 import { createClient as createSupabaseClient } from "@/utils/supabase/client";
 import { PostgrestError } from "@supabase/supabase-js";
 import { redirect } from "next/navigation";
 
-export default function Inventory() {
+export default function InventoryPage() {
 	const [openPanel, setOpenPanel] = useState(false);
 	const [successOpen, setSuccessOpen] = useState(false);
 	const [successMsg, setSuccessMsg] = useState("");
@@ -38,7 +40,12 @@ export default function Inventory() {
 	const [openEditCategory, setOpenEditCategory] = useState(false);
 	const [editCategoryName, setEditCategoryName] = useState("");
 	const [editCategoryId, setEditCategoryId] = useState("");
+	const [inventory, setInventory] = useState<Inventory[]>([]);
+	const [loadingInventory, setLoadingInventory] = useState(false);
 
+	{
+		/* Categories Functions*/
+	}
 	const getCategories = useCallback(async () => {
 		try {
 			setLoadingCategories(true);
@@ -58,28 +65,6 @@ export default function Inventory() {
 			setLoadingCategories(false);
 		}
 	}, []);
-
-	useEffect(() => {
-		// Preload categories when opening the page
-		getCategories();
-	}, [getCategories]);
-
-	useEffect(() => {
-		const supabase = createSupabaseClient();
-		const channel = supabase
-			.channel("realtime:category")
-			.on(
-				"postgres_changes",
-				{ event: "*", schema: "public", table: "category" },
-				() => {
-					getCategories();
-				}
-			)
-			.subscribe();
-		return () => {
-			supabase.removeChannel(channel);
-		};
-	}, [getCategories]);
 
 	async function handleAddCategory(name: string) {
 		if (name.trim().length === 0) {
@@ -152,6 +137,75 @@ export default function Inventory() {
 		}
 	}
 
+	{
+		/* Inventory Functions */
+	}
+	const getInventoryList = useCallback(async () => {
+		setLoadingInventory(true);
+		try {
+			//get user id
+			const supabase = await createSupabaseClient();
+			const { data: user, error: userError } = await supabase.auth.getUser();
+			if (userError) {
+				setErrMsg("Failed to get user");
+				setErrOpen(true);
+				redirect("/");
+			}
+			const res = await getInventory(user.user.id);
+			if (!res) {
+				setErrMsg("Failed to get inventory");
+				setErrOpen(true);
+				setLoadingInventory(false);
+				return;
+			}
+			setInventory(res);
+			setLoadingInventory(false);
+		} catch (e) {
+			setErrMsg(e instanceof Error ? e.message : "Something went wrong");
+			setErrOpen(true);
+		}
+	}, []);
+
+	useEffect(() => {
+		// Preload categories when opening the page
+		getCategories();
+		getInventoryList();
+	}, [getCategories, getInventoryList]);
+
+	useEffect(() => {
+		const supabase = createSupabaseClient();
+		{
+			/* Category Channel */
+		}
+		const categoryChannel = supabase
+			.channel("realtime:category")
+			.on(
+				"postgres_changes",
+				{ event: "*", schema: "public", table: "category" },
+				() => {
+					getCategories();
+				}
+			)
+			.subscribe();
+		{
+			/* Inventory Channel */
+		}
+		const inventoryChannel = supabase
+			.channel("realtime:inventory")
+			.on(
+				"postgres_changes",
+				{ event: "*", schema: "public", table: "inventory" },
+				() => {
+					getInventoryList();
+				}
+			)
+			.subscribe();
+		return () => {
+			supabase.removeChannel(categoryChannel);
+			supabase.removeChannel(inventoryChannel);
+		};
+	}, [getCategories, getInventoryList]);
+
 	return (
 		<>
 			<div className="flex flex-col px-4 mt-8 space-y-4">
@@ -200,7 +254,7 @@ export default function Inventory() {
 					{/* Add Product */}
 					{openAddProduct && (
 						<DialogPanel className="mx-auto max-w-lg w-full rounded-lg bg-white p-6">
-							<DialogTitle className="text-xl font-semibold text-gray-900 mb-4">
+							<DialogTitle className="text-lg font-bold text-black mb-4">
 								Add a Product
 							</DialogTitle>
 							<form>
@@ -357,6 +411,7 @@ export default function Inventory() {
 
 			{/* Inventory Table */}
 			<div className="flex flex-col px-4 mt-8 space-y-4">
+				{}
 				<table>
 					<thead></thead>
 				</table>

@@ -1,6 +1,21 @@
 "use server";
 import { createClient } from "@/utils/supabase/server";
 
+export async function getInventory(user_id: string) {
+	console.log("Getting inventory");
+	const supabase = await createClient();
+	const { data, error } = await supabase
+		.from("Inventory")
+		.select("*")
+		.eq("user_id", user_id);
+	console.log("Inventory: ", data);
+	if (error) {
+		console.log("Failed to get inventory: ", error);
+		return false;
+	}
+	return data;
+}
+
 export async function getCategory() {
 	const supabase = await createClient();
 
@@ -16,7 +31,7 @@ export async function getCategory() {
 		.eq("user_id", user.user.id);
 
 	if (error) {
-		console.log("error: ", error);
+		console.log("Failed to get categories: ", error);
 		return null;
 	}
 	return data;
@@ -33,6 +48,7 @@ export async function addCategory(name: string) {
 		.from("category")
 		.insert({ name, user_id: user.user.id });
 	if (error) {
+		console.log("Failed to add category: ", error);
 		return error;
 	}
 	return true;
@@ -42,6 +58,7 @@ export async function deleteCategory(id: string) {
 	const supabase = await createClient();
 	const { error } = await supabase.from("category").delete().eq("id", id);
 	if (error) {
+		console.log("Failed to delete category: ", error);
 		return false;
 	}
 	return true;
@@ -55,6 +72,7 @@ export async function editCategory(id: string, name: string, user_id: string) {
 		.eq("id", id)
 		.eq("user_id", user_id);
 	if (error) {
+		console.log("Failed to edit category: ", error);
 		return false;
 	}
 	return true;
