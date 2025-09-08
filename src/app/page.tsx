@@ -217,7 +217,7 @@ export default function Home() {
 								</TabPanel>
 
 								<TabPanel className="w-full transition-all duration-300 ease-in-out">
-									<form className="w-full h-full">
+									<form className="w-full h-full" autoComplete="off">
 										<h1 className="text-xl 2xl:text-3xl text-center mb-4 font-semibold">
 											Sign Up
 										</h1>

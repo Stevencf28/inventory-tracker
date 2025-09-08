@@ -85,11 +85,8 @@ export async function resetPassword(formData: FormData) {
 
 	if (error) {
 		console.error("Password update error:", error.message);
-		redirect("/password-reset?error=" + encodeURIComponent(error.message));
+		return { status: false, errorMessage: error.message };
 	}
 
-	redirect(
-		"/dashboard/?success=" +
-			encodeURIComponent("Password updated successfully!")
-	);
+	return { status: true } as const;
 }
