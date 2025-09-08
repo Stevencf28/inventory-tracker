@@ -1,6 +1,6 @@
 type UUID = string; //uuid is the database type, string in typescript
 
-export default interface Category {
+export interface Category {
 	id: UUID;
 	name: string;
 	user_id: UUID;

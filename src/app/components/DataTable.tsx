@@ -30,18 +30,15 @@ export function DataTable<T extends object>({
 
 	return (
 		<div className="overflow-x-auto my-6">
-			<table className="border border-gray-300 divide-y divide-gray-200 flex flex-col">
-				<thead className="bg-gray-100 w-full">
+			<table className="border min-w-full max-w-screen border-gray-300 divide-y divide-gray-200">
+				<thead className="bg-gray-100">
 					{table.getHeaderGroups().map((headerGroup) => (
-						<tr
-							key={headerGroup.id}
-							className="divide-x divide-gray-200 w-full flex flex-row justify-center"
-						>
+						<tr key={headerGroup.id} className="divide-x divide-gray-200">
 							{headerGroup.headers.map((header) => (
 								<th
 									key={header.id}
 									onClick={header.column.getToggleSortingHandler()}
-									className="w-full px-4 py-2 text-left text-sm font-medium text-gray-700 cursor-pointer select-none hover:bg-gray-200"
+									className="px-4 py-2 text-left text-sm font-medium text-gray-700 cursor-pointer select-none hover:bg-gray-200"
 								>
 									{header.isPlaceholder
 										? null
@@ -58,22 +55,27 @@ export function DataTable<T extends object>({
 						</tr>
 					))}
 				</thead>
-				<tbody className="w-full divide-y divide-gray-200">
+				<tbody className=" divide-y divide-gray-200">
 					{table.getRowModel().rows.map((row) => (
 						<tr
 							key={row.id}
-							className="hover:bg-gray-50 transition-colors divide-x divide-gray-200 w-full flex flex-row justify-center"
+							className="hover:bg-gray-50 transition-colors divide-x divide-gray-200"
 						>
 							{row.getVisibleCells().map((cell) => (
-								<td
-									key={cell.id}
-									className="px-4 py-2 w-full text-sm text-gray-800"
-								>
+								<td key={cell.id} className="px-4 py-2 text-sm text-gray-800">
 									{flexRender(cell.column.columnDef.cell, cell.getContext())}
 								</td>
 							))}
 						</tr>
 					))}
+					{/* Add a message when the table is empty */}
+					{data.length === 0 && (
+						<tr className="w-full justify-center">
+							<td colSpan={columns.length} className="text-center">
+								No data available.
+							</td>
+						</tr>
+					)}
 				</tbody>
 			</table>
 		</div>

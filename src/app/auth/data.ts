@@ -12,6 +12,11 @@ export async function getInventory(user_id: string) {
 		console.log("Failed to get inventory: ", error);
 		return false;
 	}
+	data.forEach((row) => {
+		const createdAtDate = new Date(row.created_at);
+		const formattedDate = createdAtDate.toDateString();
+		row.created_at = formattedDate;
+	});
 	return data;
 }
 
@@ -36,7 +41,7 @@ export async function addProduct(formData: FormData) {
 	return true;
 }
 
-export async function editProduct(formData: FormData) {
+export async function editProduct(id: string, formData: FormData) {
 	const supabase = await createClient();
 	const { data: user, error: userError } = await supabase.auth.getUser();
 	if (userError) {
@@ -50,11 +55,9 @@ export async function editProduct(formData: FormData) {
 			brand: formData.get("brand"),
 			cost: formData.get("cost"),
 			quantity: formData.get("quantity"),
-			available: formData.get("available"),
-			in_use: formData.get("in_use"),
 		})
 		.eq("user_id", user.user.id)
-		.eq("id", formData.get("id"));
+		.eq("id", id);
 	if (error) {
 		console.log("Failed to edit product: ", error);
 		return false;
