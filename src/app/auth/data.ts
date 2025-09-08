@@ -8,7 +8,6 @@ export async function getInventory(user_id: string) {
 		.from("Inventory")
 		.select("*")
 		.eq("user_id", user_id);
-	console.log("Inventory: ", data);
 	if (error) {
 		console.log("Failed to get inventory: ", error);
 		return false;
@@ -22,7 +21,6 @@ export async function addProduct(formData: FormData) {
 	if (userError) {
 		return false;
 	}
-	console.log("category: ", formData.get("category"));
 	const { error } = await supabase.from("Inventory").insert({
 		name: formData.get("name"),
 		category: formData.get("category"),
@@ -35,6 +33,50 @@ export async function addProduct(formData: FormData) {
 	});
 	if (error) {
 		console.log("Failed to add product: ", error);
+		return false;
+	}
+	return true;
+}
+
+export async function editProduct(formData: FormData) {
+	const supabase = await createClient();
+	const { data: user, error: userError } = await supabase.auth.getUser();
+	if (userError) {
+		return false;
+	}
+	const { error } = await supabase
+		.from("Inventory")
+		.update({
+			name: formData.get("name"),
+			category: formData.get("category"),
+			brand: formData.get("brand"),
+			cost: formData.get("cost"),
+			quantity: formData.get("quantity"),
+			available: formData.get("available"),
+			in_use: formData.get("in_use"),
+		})
+		.eq("user_id", user.user.id)
+		.eq("id", formData.get("id"));
+	if (error) {
+		console.log("Failed to edit product: ", error);
+		return false;
+	}
+	return true;
+}
+
+export async function deleteProduct(id: string) {
+	const supabase = await createClient();
+	const { data: user, error: userError } = await supabase.auth.getUser();
+	if (userError) {
+		return false;
+	}
+	const { error } = await supabase
+		.from("Inventory")
+		.delete()
+		.eq("id", id)
+		.eq("user_id", user.user.id);
+	if (error) {
+		console.log("Failed to delete product: ", error);
 		return false;
 	}
 	return true;

@@ -19,9 +19,13 @@ import {
 	editCategory,
 	getInventory,
 	addProduct,
+	editProduct,
+	deleteProduct,
 } from "@/app/auth/data";
 import SuccessPopup from "@/app/components/success-popup";
 import ErrorPopup from "@/app/components/error-popup";
+import { DataTable } from "@/app/components/DataTable";
+import type { ColumnDef } from "@tanstack/react-table";
 import Category from "@/app/models";
 import Inventory from "@/app/models";
 import { createClient as createSupabaseClient } from "@/utils/supabase/client";
@@ -44,6 +48,8 @@ export default function InventoryPage() {
 	const [inventory, setInventory] = useState<Inventory[]>([]);
 	const [loadingInventory, setLoadingInventory] = useState(false);
 	const [error, setError] = useState("");
+	const [openEditProduct, setOpenEditProduct] = useState(false);
+	const [editProductId, setEditProductId] = useState("");
 
 	{
 		/* Categories Functions*/
@@ -186,15 +192,53 @@ export default function InventoryPage() {
 		}
 	}
 
+	async function handleEditProduct(formData: FormData) {
+		try {
+			const res = await editProduct(formData);
+			if (!res) {
+				setError("Failed to edit product");
+				return;
+			}
+			setSuccessMsg("Product edited successfully");
+			setSuccessOpen(true);
+			setOpenEditProduct(false);
+		} catch (e) {
+			setErrMsg(e instanceof Error ? e.message : "Something went wrong");
+			setErrOpen(true);
+		}
+	}
+
+	async function handleDeleteProduct(id: string) {
+		try {
+			const res = await deleteProduct(id);
+			if (!res) {
+				setErrMsg("Failed to delete product");
+				setErrOpen(true);
+				return;
+			}
+			setSuccessMsg("Product deleted successfully");
+			setSuccessOpen(true);
+			setOpenEditProduct(false);
+		} catch (e) {
+			setErrMsg(e instanceof Error ? e.message : "Something went wrong");
+			setErrOpen(true);
+		}
+	}
+
 	{
 		/* Use Effects */
 	}
+	// Preload inventory and categories when opening the page
 	useEffect(() => {
-		// Preload categories when opening the page
 		getCategories();
 		getInventoryList();
 	}, [getCategories, getInventoryList]);
 
+	{
+		/* Realtime Channels:
+		Supabase allows us to listen to changes in the database
+		and update the UI automatically */
+	}
 	useEffect(() => {
 		const supabase = createSupabaseClient();
 		{
@@ -228,6 +272,80 @@ export default function InventoryPage() {
 			supabase.removeChannel(inventoryChannel);
 		};
 	}, [getCategories, getInventoryList]);
+
+	{
+		/* Columns for the inventory table */
+	}
+	const inventoryColumns: ColumnDef<Inventory, unknown>[] = [
+		{ accessorKey: "category", header: "Category" },
+		{ accessorKey: "name", header: "Name" },
+		{ accessorKey: "brand", header: "Brand" },
+		{ accessorKey: "cost", header: "Cost" },
+		{ accessorKey: "quantity", header: "Quantity" },
+		{ accessorKey: "available", header: "Available" },
+		{ accessorKey: "in_use", header: "In Use" },
+		{ accessorKey: "created_at", header: "Created At" },
+		{
+			id: "actions",
+			header: "Actions",
+			cell: ({ row }) => {
+				const i = row.original as Inventory;
+				return (
+					<div className="flex flex-row space-x-2">
+						<Button
+							onClick={() => {
+								setOpenEditProduct(true);
+								setEditProductId(i.id);
+							}}
+							className="bg-yellow-500 border-2 text-white px-3 py-1 w-fit rounded-lg hover:cursor-pointer hover:bg-red-600 transition-colors duration-200"
+						>
+							Edit
+						</Button>
+						<Button
+							onClick={() => handleDeleteProduct(i.id)}
+							className="bg-red-500 border-2 text-white px-3 py-1 w-fit rounded-lg hover:cursor-pointer hover:bg-red-600 transition-colors duration-200"
+						>
+							Delete
+						</Button>
+					</div>
+				);
+			},
+		},
+	];
+
+	{
+		/* Columns for the categories table */
+	}
+	const categoryColumns: ColumnDef<Category, unknown>[] = [
+		{ accessorKey: "name", header: "Name" },
+		{
+			id: "actions",
+			header: "Actions",
+			cell: ({ row }) => {
+				const c = row.original as Category;
+				return (
+					<div className="flex flex-row space-x-2">
+						<Button
+							onClick={() => {
+								setOpenEditCategory(true);
+								setEditCategoryName(c.name);
+								setEditCategoryId(c.id);
+							}}
+							className="bg-yellow-500 border-2 text-white px-3 py-1 w-fit rounded-lg hover:cursor-pointer hover:bg-red-600 transition-colors duration-200"
+						>
+							Edit
+						</Button>
+						<Button
+							onClick={() => handleDeleteCategory(c.id)}
+							className="bg-red-500 border-2 text-white px-3 py-1 w-fit rounded-lg hover:cursor-pointer hover:bg-red-600 transition-colors duration-200"
+						>
+							Delete
+						</Button>
+					</div>
+				);
+			},
+		},
+	];
 
 	return (
 		<>
@@ -396,60 +514,15 @@ export default function InventoryPage() {
 								Add Category
 							</Button>
 							{/* Categories Table */}
-							<div className="mt-4 overflow-x-auto">
+							<div className="mt-4">
 								<legend className="text-lg font-semibold my-2">
 									Categories
 								</legend>
-								<table className="min-w-full table-auto text-sm border-2 border-gray-500">
-									<thead className="bg-gray-50 sticky top-0">
-										<tr>
-											<th className="px-4 py-2 text-left w-full font-medium text-gray-700">
-												Name
-											</th>
-											<th className="px-4 py-2 text-left w-full font-medium text-gray-700">
-												Actions
-											</th>
-										</tr>
-									</thead>
-									<tbody className="divide-y divide-gray-200">
-										{loadingCategories && (
-											<tr>
-												<td className="px-4 py-3 text-gray-500">Loading...</td>
-											</tr>
-										)}
-										{categories.length === 0 ? (
-											<tr>
-												<td className="px-4 py-3 text-gray-500">
-													No categories found
-												</td>
-											</tr>
-										) : (
-											categories.map((c) => (
-												<tr key={c.id}>
-													<td className="px-4 py-3">{c.name}</td>
-													<td className="px-4 py-3 flex flex-row space-x-2">
-														<Button
-															onClick={() => {
-																setOpenEditCategory(true);
-																setEditCategoryName(c.name);
-																setEditCategoryId(c.id);
-															}}
-															className="bg-yellow-500 border-2 text-white px-3 py-1 w-fit rounded-lg hover:cursor-pointer hover:bg-red-600 transition-colors duration-200"
-														>
-															Edit
-														</Button>
-														<Button
-															onClick={() => handleDeleteCategory(c.id)}
-															className="bg-red-500 border-2 text-white px-3 py-1 w-fit rounded-lg hover:cursor-pointer hover:bg-red-600 transition-colors duration-200"
-														>
-															Delete
-														</Button>
-													</td>
-												</tr>
-											))
-										)}
-									</tbody>
-								</table>
+								{loadingCategories ? (
+									<div className="px-4 py-3 text-gray-500">Loading...</div>
+								) : (
+									<DataTable data={categories} columns={categoryColumns} />
+								)}
 							</div>
 						</DialogPanel>
 					)}
@@ -504,6 +577,95 @@ export default function InventoryPage() {
 						</form>
 					</DialogPanel>
 				</div>
+			</Dialog>
+
+			{/* Edit Product Dialog */}
+			<Dialog open={openEditProduct} onClose={setOpenEditProduct}>
+				<DialogPanel className="mx-auto max-w-lg w-full rounded-lg bg-white p-6">
+					<DialogTitle className="text-lg font-bold text-black mb-4">
+						Edit Product
+					</DialogTitle>
+					{error && (
+						<div className="mb-4 p-3 bg-red-100 border border-red-400 text-red-700 rounded">
+							{error}
+						</div>
+					)}
+					<form autoComplete="off">
+						<Fieldset className="flex flex-col space-y-2">
+							<Field className="flex flex-col">
+								<Label className="font-medium text-md">Product Name</Label>
+								<Input
+									required
+									type="text"
+									id="name"
+									name="name"
+									className="border-2 border-gray-500 rounded-md p-1 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+								/>
+							</Field>
+
+							<Field className="flex flex-col">
+								<Label className="font-medium text-md">Category</Label>
+								<Select
+									required
+									id="category"
+									name="category"
+									defaultValue=""
+									className="w-full border-2 border-gray-500 rounded-md p-1 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+								>
+									<option value="" disabled>
+										{loadingCategories ? "Loading..." : "Select a category"}
+									</option>
+									{categories.map((c) => (
+										<option key={c.id} value={c.name}>
+											{c.name}
+										</option>
+									))}
+								</Select>
+							</Field>
+							<Field className="flex flex-col">
+								<Label className="font-medium text-md">Brand</Label>
+								<Input
+									required
+									type="text"
+									id="brand"
+									name="brand"
+									className="border-2 border-gray-500 rounded-md p-1 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+								/>
+							</Field>
+							<div className="flex flex-row justify-between">
+								<Field className="flex flex-col">
+									<Label className="font-medium text-md">Cost</Label>
+									<Input
+										required
+										type="number"
+										id="cost"
+										name="cost"
+										step="0.01"
+										className="border-2 border-gray-500 rounded-md p-1 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+									/>
+								</Field>
+								<Field className="flex flex-col">
+									<Label className="font-medium text-md">Quantity</Label>
+									<Input
+										required
+										type="number"
+										id="quantity"
+										name="quantity"
+										step="1"
+										className="border-2 border-gray-500 rounded-md p-1 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+									/>
+								</Field>
+							</div>
+							<Button
+								type="submit"
+								formAction={handleAddProduct}
+								className="bg-blue-500 border-2 text-white px-3 py-2 w-fit rounded-lg hover:cursor-pointer hover:bg-blue-600 transition-colors duration-200"
+							>
+								Add Product
+							</Button>
+						</Fieldset>
+					</form>
+				</DialogPanel>
 			</Dialog>
 
 			{/* Success Popup */}
