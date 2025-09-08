@@ -209,7 +209,7 @@ export default function Home() {
 										</button>
 										<button
 											formAction={handleLogin}
-											className="w-full p-2 my-3 bg-blue-600 text-sm sm:text-base xl:text-lg text-white rounded-lg border-2 border-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 transition-colors duration-200 font-medium"
+											className="w-full p-2 my-3 bg-blue-600 text-sm sm:text-base xl:text-lg text-white rounded-lg border-2 border-blue-600 hover:bg-blue-700 hover:cursor-pointer focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 transition-colors duration-200 font-medium"
 										>
 											Login
 										</button>
@@ -295,7 +295,7 @@ export default function Home() {
 												password.length < 6 ||
 												confirmPassword.length < 6
 											}
-											className="w-full p-2 my-3 bg-green-600 text-sm sm:text-base xl:text-lg text-white rounded-lg border-2 border-green-600 hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-green-500 focus:ring-offset-2 transition-colors duration-200 font-medium disabled:opacity-50 disabled:cursor-not-allowed"
+											className="w-full p-2 my-3 bg-green-600 text-sm sm:text-base xl:text-lg text-white rounded-lg border-2 border-green-600 hover:bg-green-700 hover:cursor-pointer focus:outline-none focus:ring-2 focus:ring-green-500 focus:ring-offset-2 transition-colors duration-200 font-medium disabled:opacity-50 disabled:cursor-not-allowed"
 										>
 											Create Account
 										</button>
