@@ -5,7 +5,7 @@ export async function getInventory(user_id: string) {
 	console.log("Getting inventory");
 	const supabase = await createClient();
 	const { data, error } = await supabase
-		.from("Inventory")
+		.from("inventory")
 		.select("*")
 		.eq("user_id", user_id);
 	if (error) {
@@ -21,15 +21,13 @@ export async function addProduct(formData: FormData) {
 	if (userError) {
 		return false;
 	}
-	const { error } = await supabase.from("Inventory").insert({
+	const { error } = await supabase.from("inventory").insert({
 		name: formData.get("name"),
 		category: formData.get("category"),
 		brand: formData.get("brand"),
 		cost: formData.get("cost"),
 		quantity: formData.get("quantity"),
-		available: formData.get("quantity"),
 		user_id: user.user.id,
-		in_use: 0,
 	});
 	if (error) {
 		console.log("Failed to add product: ", error);
@@ -45,7 +43,7 @@ export async function editProduct(formData: FormData) {
 		return false;
 	}
 	const { error } = await supabase
-		.from("Inventory")
+		.from("inventory")
 		.update({
 			name: formData.get("name"),
 			category: formData.get("category"),
@@ -71,7 +69,7 @@ export async function deleteProduct(id: string) {
 		return false;
 	}
 	const { error } = await supabase
-		.from("Inventory")
+		.from("inventory")
 		.delete()
 		.eq("id", id)
 		.eq("user_id", user.user.id);

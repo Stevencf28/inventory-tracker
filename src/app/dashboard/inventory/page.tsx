@@ -241,6 +241,7 @@ export default function InventoryPage() {
 	}
 	useEffect(() => {
 		const supabase = createSupabaseClient();
+
 		{
 			/* Category Channel */
 		}
@@ -254,6 +255,7 @@ export default function InventoryPage() {
 				}
 			)
 			.subscribe();
+
 		{
 			/* Inventory Channel */
 		}
