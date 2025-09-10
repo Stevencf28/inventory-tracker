@@ -12,11 +12,6 @@ export async function getInventory(user_id: string) {
 		console.log("Failed to get inventory: ", error);
 		return false;
 	}
-	data.forEach((row) => {
-		const createdAtDate = new Date(row.created_at);
-		const formattedDate = createdAtDate.toDateString();
-		row.created_at = formattedDate;
-	});
 	return data;
 }
 
@@ -27,9 +22,14 @@ export async function addProduct(formData: FormData) {
 		return false;
 	}
 	const { error } = await supabase.from("inventory").insert({
-		name: formData.get("name"),
+		date: formData.get("date") as string,
+		name:
+			(formData.get("name") as string).charAt(0).toUpperCase() +
+			(formData.get("name") as string).slice(1),
 		category: formData.get("category"),
-		brand: formData.get("brand"),
+		brand:
+			(formData.get("brand") as string).charAt(0).toUpperCase() +
+			(formData.get("brand") as string).slice(1),
 		cost: formData.get("cost"),
 		quantity: formData.get("quantity"),
 		user_id: user.user.id,
@@ -50,9 +50,16 @@ export async function editProduct(id: string, formData: FormData) {
 	const { error } = await supabase
 		.from("inventory")
 		.update({
-			name: formData.get("name"),
-			category: formData.get("category"),
-			brand: formData.get("brand"),
+			date: formData.get("date"),
+			name:
+				(formData.get("name") as string).charAt(0).toUpperCase() +
+				(formData.get("name") as string).slice(1),
+			category:
+				(formData.get("category") as string).charAt(0).toUpperCase() +
+				(formData.get("category") as string).slice(1),
+			brand:
+				(formData.get("brand") as string).charAt(0).toUpperCase() +
+				(formData.get("brand") as string).slice(1),
 			cost: formData.get("cost"),
 			quantity: formData.get("quantity"),
 		})
@@ -111,12 +118,13 @@ export async function addCategory(name: string) {
 	if (userError) {
 		return false;
 	}
+	name = name.charAt(0).toUpperCase() + name.slice(1);
 	const { error } = await supabase
 		.from("category")
 		.insert({ name, user_id: user.user.id });
 	if (error) {
 		console.log("Failed to add category: ", error);
-		return error;
+		return false;
 	}
 	return true;
 }
@@ -133,6 +141,7 @@ export async function deleteCategory(id: string) {
 
 export async function editCategory(id: string, name: string, user_id: string) {
 	const supabase = await createClient();
+	name = name.charAt(0).toUpperCase() + name.slice(1);
 	const { error } = await supabase
 		.from("category")
 		.update({ name })
