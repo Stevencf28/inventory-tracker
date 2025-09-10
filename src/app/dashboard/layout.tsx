@@ -14,9 +14,9 @@ export default async function DashboardLayout({
 	}
 	const userName = data.user.user_metadata.display_name;
 	return (
-		<div className="flex flex-col md:flex-row w-full">
+		<main className="flex flex-col md:flex-row min-w-screen min-h-screen">
 			<Nav userName={userName} />
-			<main className="w-full px-4 py-2">{children}</main>
-		</div>
+			<div className="pt-20 md:pt-8 p-8 w-full h-full">{children}</div>
+		</main>
 	);
 }
