@@ -142,9 +142,6 @@ export default function Home() {
 						priority
 						className="mb-8 right-0"
 					/>
-					{/* <h1 className="text-3xl sm:text-4xl 2xl:text-5xl text-center font-semibold mb-8">
-						Inventory Tracker
-					</h1> */}
 					<p className="max-w-xs 2xl:max-w-md text-center lg:text-end w-full text-sm sm:text-base 2xl:text-3xl text-balance">
 						Track your inventory easily and efficiently with our Inventory
 						Tracker app.

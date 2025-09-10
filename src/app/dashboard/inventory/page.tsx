@@ -27,8 +27,12 @@ import ErrorPopup from "@/app/components/error-popup";
 import { DataTable } from "@/app/components/DataTable";
 import type { ColumnDef } from "@tanstack/react-table";
 import { Category, Inventory } from "@/app/models";
+
+// Raw inventory data from database (category is just an ID string)
+interface RawInventory extends Omit<Inventory, "category"> {
+	category: string;
+}
 import { createClient as createSupabaseClient } from "@/utils/supabase/client";
-import { PostgrestError } from "@supabase/supabase-js";
 import { redirect } from "next/navigation";
 
 export default function InventoryPage() {
@@ -45,6 +49,7 @@ export default function InventoryPage() {
 	const [editCategoryName, setEditCategoryName] = useState("");
 	const [editCategoryId, setEditCategoryId] = useState("");
 	const [inventory, setInventory] = useState<Inventory[]>([]);
+	const [rawInventory, setRawInventory] = useState<RawInventory[]>([]);
 	const [loadingInventory, setLoadingInventory] = useState(false);
 	const [error, setError] = useState("");
 	const [openEditProduct, setOpenEditProduct] = useState(false);
@@ -84,14 +89,14 @@ export default function InventoryPage() {
 			setErrOpen(true);
 			return;
 		}
-		if (categories.some((c) => c.name === name)) {
+		if (categories.find((c) => c.name.toLowerCase() === name.toLowerCase())) {
 			setErrMsg("Category already exists");
 			setErrOpen(true);
 			return;
 		}
 		try {
 			const res = await addCategory(name);
-			if (!res || res instanceof PostgrestError) {
+			if (!res) {
 				setErrMsg("Failed to add category");
 				setErrOpen(true);
 				return;
@@ -138,6 +143,8 @@ export default function InventoryPage() {
 			}
 			setSuccessMsg("Category deleted successfully");
 			setSuccessOpen(true);
+			// Refresh both categories and inventory since deleting a category cascades to delete inventory items
+			await Promise.all([getCategories(), getInventoryList()]);
 		} catch (e) {
 			setErrMsg(e instanceof Error ? e.message : "Something went wrong");
 			setErrOpen(true);
@@ -165,7 +172,8 @@ export default function InventoryPage() {
 				setLoadingInventory(false);
 				return;
 			}
-			setInventory(res);
+			// Store raw inventory data without category mapping
+			setRawInventory(res);
 			setLoadingInventory(false);
 		} catch (e) {
 			setErrMsg(e instanceof Error ? e.message : "Something went wrong");
@@ -174,7 +182,6 @@ export default function InventoryPage() {
 	}, []);
 
 	async function handleAddProduct(formData: FormData) {
-		console.log("Adding product");
 		try {
 			const res = await addProduct(formData);
 			if (!res) {
@@ -184,6 +191,7 @@ export default function InventoryPage() {
 			setSuccessMsg("Product added successfully");
 			setSuccessOpen(true);
 			await getInventoryList();
+
 			setOpenAddProduct(false);
 			setOpenPanel(false);
 		} catch (e) {
@@ -236,6 +244,26 @@ export default function InventoryPage() {
 		getInventoryList();
 	}, [getCategories, getInventoryList]);
 
+	// Map categories to inventory items when both are available
+	useEffect(() => {
+		if (rawInventory.length > 0 && categories.length > 0) {
+			const mappedInventory = rawInventory
+				.map((item) => {
+					// Find the category object by ID
+					const categoryObj = categories.find((c) => c.id === item.category);
+					return {
+						...item,
+						category: categoryObj as Category,
+					};
+				})
+				.filter((item) => item.category); // Filter out items with undefined categories
+			setInventory(mappedInventory);
+		} else if (rawInventory.length === 0) {
+			// If no raw inventory, clear the mapped inventory
+			setInventory([]);
+		}
+	}, [rawInventory, categories]);
+
 	{
 		/* Realtime Channels:
 		Supabase allows us to listen to changes in the database
@@ -252,8 +280,12 @@ export default function InventoryPage() {
 			.on(
 				"postgres_changes",
 				{ event: "*", schema: "public", table: "category" },
-				() => {
+				(payload) => {
 					getCategories();
+					// If a category was deleted, also refresh inventory since it cascades
+					if (payload.eventType === "DELETE") {
+						getInventoryList();
+					}
 				}
 			)
 			.subscribe();
@@ -281,14 +313,22 @@ export default function InventoryPage() {
 		/* Columns for the inventory table */
 	}
 	const inventoryColumns: ColumnDef<Inventory, unknown>[] = [
-		{ accessorKey: "category", header: "Category" },
+		{ accessorKey: "id", header: "ID" },
+		{
+			accessorKey: "category",
+			header: "Category",
+			cell: ({ row }) => {
+				const category = row.getValue("category") as Category;
+				return category?.name || "NULL";
+			},
+		},
 		{ accessorKey: "name", header: "Name" },
 		{ accessorKey: "brand", header: "Brand" },
 		{ accessorKey: "cost", header: "Cost" },
 		{ accessorKey: "quantity", header: "Quantity" },
 		{ accessorKey: "available", header: "Available" },
 		{ accessorKey: "in_use", header: "In Use" },
-		{ accessorKey: "created_at", header: "Created At" },
+		{ accessorKey: "date", header: "Date" },
 		{
 			id: "actions",
 			header: "Actions",
@@ -414,6 +454,18 @@ export default function InventoryPage() {
 							<form autoComplete="off">
 								<Fieldset className="flex flex-col space-y-2">
 									<Field className="flex flex-col">
+										<Label className="font-medium text-md">
+											Date of Purchase
+										</Label>
+										<Input
+											required
+											type="date"
+											id="date"
+											name="date"
+											className="border-2 border-gray-500 rounded-md p-1 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+										/>
+									</Field>
+									<Field className="flex flex-col">
 										<Label className="font-medium text-md">Product Name</Label>
 										<Input
 											required
@@ -437,7 +489,7 @@ export default function InventoryPage() {
 												{loadingCategories ? "Loading..." : "Select a category"}
 											</option>
 											{categories.map((c) => (
-												<option key={c.id} value={c.name}>
+												<option key={c.id} value={c.id}>
 													{c.name}
 												</option>
 											))}
@@ -602,6 +654,19 @@ export default function InventoryPage() {
 						<form autoComplete="off">
 							<Fieldset className="flex flex-col space-y-2">
 								<Field className="flex flex-col">
+									<Label className="font-medium text-md">
+										Date of Purchase
+									</Label>
+									<Input
+										required
+										type="date"
+										id="date"
+										name="date"
+										defaultValue={currentProduct?.date}
+										className="border-2 border-gray-500 rounded-md p-1 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+									/>
+								</Field>
+								<Field className="flex flex-col">
 									<Label className="font-medium text-md">Product Name</Label>
 									<Input
 										required
@@ -619,14 +684,14 @@ export default function InventoryPage() {
 										required
 										id="category"
 										name="category"
-										defaultValue={currentProduct?.category}
+										defaultValue={currentProduct?.category.id}
 										className="w-full border-2 border-gray-500 rounded-md p-1 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
 									>
 										<option value="" disabled>
 											{loadingCategories ? "Loading..." : "Select a category"}
 										</option>
 										{categories.map((c) => (
-											<option key={c.id} value={c.name}>
+											<option key={c.id} value={c.id}>
 												{c.name}
 											</option>
 										))}

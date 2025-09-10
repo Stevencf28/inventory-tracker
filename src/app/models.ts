@@ -8,13 +8,13 @@ export interface Category {
 
 export interface Inventory {
 	id: UUID;
+	date: string;
 	name: string;
 	quantity: number;
 	cost: number;
 	user_id: UUID;
 	available: number; // available is automatically set by the following formula: quantity - in_use
 	brand: string;
-	category: string;
-	created_at: string;
+	category: Category;
 	in_use: number; // default value is 0
 }
