@@ -442,7 +442,7 @@ export default function InventoryPage() {
 				<div className="fixed inset-0 flex w-screen items-center justify-center p-4">
 					{/* Add Product */}
 					{openAddProduct && (
-						<DialogPanel className="mx-auto max-w-lg w-full rounded-lg bg-white p-6">
+						<DialogPanel className=" mx-auto max-w-lg w-full rounded-lg bg-white p-6">
 							<DialogTitle className="text-lg font-bold text-black mb-4">
 								Add a Product
 							</DialogTitle>
@@ -451,9 +451,9 @@ export default function InventoryPage() {
 									{error}
 								</div>
 							)}
-							<form autoComplete="off">
-								<Fieldset className="flex flex-col space-y-2">
-									<Field className="flex flex-col">
+							<form autoComplete="off" className="w-full max-w-full">
+								<Fieldset className="flex flex-col space-y-4 w-full max-w-full">
+									<Field className="flex flex-col w-full">
 										<Label className="font-medium text-md">
 											Date of Purchase
 										</Label>
@@ -462,21 +462,21 @@ export default function InventoryPage() {
 											type="date"
 											id="date"
 											name="date"
-											className="border-2 border-gray-500 rounded-md p-1 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+											className="w-full border-2 border-gray-500 rounded-md p-1 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
 										/>
 									</Field>
-									<Field className="flex flex-col">
+									<Field className="flex flex-col w-full">
 										<Label className="font-medium text-md">Product Name</Label>
 										<Input
 											required
 											type="text"
 											id="name"
 											name="name"
-											className="border-2 border-gray-500 rounded-md p-1 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+											className="w-full border-2 border-gray-500 rounded-md p-1 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
 										/>
 									</Field>
 
-									<Field className="flex flex-col">
+									<Field className="flex flex-col w-full">
 										<Label className="font-medium text-md">Category</Label>
 										<Select
 											required
@@ -495,18 +495,18 @@ export default function InventoryPage() {
 											))}
 										</Select>
 									</Field>
-									<Field className="flex flex-col">
+									<Field className="flex flex-col w-full">
 										<Label className="font-medium text-md">Brand</Label>
 										<Input
 											required
 											type="text"
 											id="brand"
 											name="brand"
-											className="border-2 border-gray-500 rounded-md p-1 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+											className="w-full border-2 border-gray-500 rounded-md p-1 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
 										/>
 									</Field>
-									<div className="flex flex-row justify-between">
-										<Field className="flex flex-col">
+									<div className="flex flex-row gap-4 w-full">
+										<Field className="flex flex-col flex-1">
 											<Label className="font-medium text-md">Cost</Label>
 											<Input
 												required
@@ -514,10 +514,10 @@ export default function InventoryPage() {
 												id="cost"
 												name="cost"
 												step="0.01"
-												className="border-2 border-gray-500 rounded-md p-1 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+												className="w-full border-2 border-gray-500 rounded-md p-1 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
 											/>
 										</Field>
-										<Field className="flex flex-col">
+										<Field className="flex flex-col flex-1">
 											<Label className="font-medium text-md">Quantity</Label>
 											<Input
 												required
@@ -525,7 +525,7 @@ export default function InventoryPage() {
 												id="quantity"
 												name="quantity"
 												step="1"
-												className="border-2 border-gray-500 rounded-md p-1 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+												className="w-full border-2 border-gray-500 rounded-md p-1 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
 											/>
 										</Field>
 									</div>
@@ -651,9 +651,9 @@ export default function InventoryPage() {
 								{error}
 							</div>
 						)}
-						<form autoComplete="off">
-							<Fieldset className="flex flex-col space-y-2">
-								<Field className="flex flex-col">
+						<form autoComplete="off" className="w-full max-w-full">
+							<Fieldset className="flex flex-col space-y-4 w-full max-w-full">
+								<Field className="flex flex-col w-full">
 									<Label className="font-medium text-md">
 										Date of Purchase
 									</Label>
@@ -663,10 +663,10 @@ export default function InventoryPage() {
 										id="date"
 										name="date"
 										defaultValue={currentProduct?.date}
-										className="border-2 border-gray-500 rounded-md p-1 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+										className="w-full border-2 border-gray-500 rounded-md p-1 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
 									/>
 								</Field>
-								<Field className="flex flex-col">
+								<Field className="flex flex-col w-full">
 									<Label className="font-medium text-md">Product Name</Label>
 									<Input
 										required
@@ -674,11 +674,11 @@ export default function InventoryPage() {
 										id="name"
 										name="name"
 										defaultValue={currentProduct?.name}
-										className="border-2 border-gray-500 rounded-md p-1 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+										className="w-full border-2 border-gray-500 rounded-md p-1 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
 									/>
 								</Field>
 
-								<Field className="flex flex-col">
+								<Field className="flex flex-col w-full">
 									<Label className="font-medium text-md">Category</Label>
 									<Select
 										required
@@ -697,7 +697,7 @@ export default function InventoryPage() {
 										))}
 									</Select>
 								</Field>
-								<Field className="flex flex-col">
+								<Field className="flex flex-col w-full">
 									<Label className="font-medium text-md">Brand</Label>
 									<Input
 										required
@@ -705,11 +705,11 @@ export default function InventoryPage() {
 										id="brand"
 										name="brand"
 										defaultValue={currentProduct?.brand}
-										className="border-2 border-gray-500 rounded-md p-1 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+										className="w-full border-2 border-gray-500 rounded-md p-1 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
 									/>
 								</Field>
-								<div className="flex flex-row justify-between">
-									<Field className="flex flex-col">
+								<div className="flex flex-row gap-4 w-full">
+									<Field className="flex flex-col flex-1">
 										<Label className="font-medium text-md">Cost</Label>
 										<Input
 											required
@@ -718,10 +718,10 @@ export default function InventoryPage() {
 											name="cost"
 											step="0.01"
 											defaultValue={currentProduct?.cost}
-											className="border-2 border-gray-500 rounded-md p-1 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+											className="w-full border-2 border-gray-500 rounded-md p-1 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
 										/>
 									</Field>
-									<Field className="flex flex-col">
+									<Field className="flex flex-col flex-1">
 										<Label className="font-medium text-md">Quantity</Label>
 										<Input
 											required
@@ -730,7 +730,7 @@ export default function InventoryPage() {
 											name="quantity"
 											step="1"
 											defaultValue={currentProduct?.quantity}
-											className="border-2 border-gray-500 rounded-md p-1 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+											className="w-full border-2 border-gray-500 rounded-md p-1 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
 										/>
 									</Field>
 								</div>
