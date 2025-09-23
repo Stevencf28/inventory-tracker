@@ -148,7 +148,6 @@ export default function InventoryPage() {
 	}
 	const getInventoryList = useCallback(async () => {
 		setLoadingInventory(true);
-		console.log("categories?", categories);
 		try {
 			//get user id
 			const supabase = await createSupabaseClient();
@@ -239,7 +238,6 @@ export default function InventoryPage() {
 		and update the UI automatically */
 	}
 	useEffect(() => {
-		console.log("useEffect subscription");
 		const supabase = createSupabaseClient();
 		{
 			/* Category Channel */
@@ -251,7 +249,6 @@ export default function InventoryPage() {
 				{ event: "*", schema: "public", table: "category" },
 				(payload) => {
 					getCategories();
-					console.log("Category payload: ", payload);
 					if (payload.eventType === "DELETE") {
 						getInventoryList();
 					}
@@ -268,7 +265,6 @@ export default function InventoryPage() {
 				{ event: "*", schema: "public", table: "inventory" },
 				(payload) => {
 					getCategories();
-					console.log("Inventory payload: ", payload);
 					getInventoryList();
 				}
 			)
