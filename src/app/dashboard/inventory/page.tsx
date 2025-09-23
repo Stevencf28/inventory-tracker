@@ -27,11 +27,6 @@ import ErrorPopup from "@/app/components/error-popup";
 import { DataTable } from "@/app/components/DataTable";
 import type { ColumnDef } from "@tanstack/react-table";
 import { Category, Inventory } from "@/app/models";
-
-// Raw inventory data from database (category is just an ID string)
-interface RawInventory extends Omit<Inventory, "category"> {
-	category: string;
-}
 import { createClient as createSupabaseClient } from "@/utils/supabase/client";
 import { redirect } from "next/navigation";
 
@@ -49,7 +44,6 @@ export default function InventoryPage() {
 	const [editCategoryName, setEditCategoryName] = useState("");
 	const [editCategoryId, setEditCategoryId] = useState("");
 	const [inventory, setInventory] = useState<Inventory[]>([]);
-	const [rawInventory, setRawInventory] = useState<RawInventory[]>([]);
 	const [loadingInventory, setLoadingInventory] = useState(false);
 	const [error, setError] = useState("");
 	const [openEditProduct, setOpenEditProduct] = useState(false);
@@ -143,8 +137,6 @@ export default function InventoryPage() {
 			}
 			setSuccessMsg("Category deleted successfully");
 			setSuccessOpen(true);
-			// Refresh both categories and inventory since deleting a category cascades to delete inventory items
-			await Promise.all([getCategories(), getInventoryList()]);
 		} catch (e) {
 			setErrMsg(e instanceof Error ? e.message : "Something went wrong");
 			setErrOpen(true);
@@ -156,6 +148,7 @@ export default function InventoryPage() {
 	}
 	const getInventoryList = useCallback(async () => {
 		setLoadingInventory(true);
+		console.log("categories?", categories);
 		try {
 			//get user id
 			const supabase = await createSupabaseClient();
@@ -172,8 +165,7 @@ export default function InventoryPage() {
 				setLoadingInventory(false);
 				return;
 			}
-			// Store raw inventory data without category mapping
-			setRawInventory(res);
+			setInventory(res);
 			setLoadingInventory(false);
 		} catch (e) {
 			setErrMsg(e instanceof Error ? e.message : "Something went wrong");
@@ -190,7 +182,6 @@ export default function InventoryPage() {
 			}
 			setSuccessMsg("Product added successfully");
 			setSuccessOpen(true);
-			await getInventoryList();
 
 			setOpenAddProduct(false);
 			setOpenPanel(false);
@@ -209,7 +200,6 @@ export default function InventoryPage() {
 			}
 			setSuccessMsg("Product edited successfully");
 			setSuccessOpen(true);
-			await getInventoryList();
 			setOpenEditProduct(false);
 		} catch (e) {
 			setErrMsg(e instanceof Error ? e.message : "Something went wrong");
@@ -228,7 +218,6 @@ export default function InventoryPage() {
 			setSuccessMsg("Product deleted successfully");
 			setSuccessOpen(true);
 			setOpenEditProduct(false);
-			await getInventoryList();
 		} catch (e) {
 			setErrMsg(e instanceof Error ? e.message : "Something went wrong");
 			setErrOpen(true);
@@ -244,34 +233,14 @@ export default function InventoryPage() {
 		getInventoryList();
 	}, [getCategories, getInventoryList]);
 
-	// Map categories to inventory items when both are available
-	useEffect(() => {
-		if (rawInventory.length > 0 && categories.length > 0) {
-			const mappedInventory = rawInventory
-				.map((item) => {
-					// Find the category object by ID
-					const categoryObj = categories.find((c) => c.id === item.category);
-					return {
-						...item,
-						category: categoryObj as Category,
-					};
-				})
-				.filter((item) => item.category); // Filter out items with undefined categories
-			setInventory(mappedInventory);
-		} else if (rawInventory.length === 0) {
-			// If no raw inventory, clear the mapped inventory
-			setInventory([]);
-		}
-	}, [rawInventory, categories]);
-
 	{
 		/* Realtime Channels:
 		Supabase allows us to listen to changes in the database
 		and update the UI automatically */
 	}
 	useEffect(() => {
+		console.log("useEffect subscription");
 		const supabase = createSupabaseClient();
-
 		{
 			/* Category Channel */
 		}
@@ -282,14 +251,13 @@ export default function InventoryPage() {
 				{ event: "*", schema: "public", table: "category" },
 				(payload) => {
 					getCategories();
-					// If a category was deleted, also refresh inventory since it cascades
+					console.log("Category payload: ", payload);
 					if (payload.eventType === "DELETE") {
 						getInventoryList();
 					}
 				}
 			)
 			.subscribe();
-
 		{
 			/* Inventory Channel */
 		}
@@ -298,7 +266,9 @@ export default function InventoryPage() {
 			.on(
 				"postgres_changes",
 				{ event: "*", schema: "public", table: "inventory" },
-				() => {
+				(payload) => {
+					getCategories();
+					console.log("Inventory payload: ", payload);
 					getInventoryList();
 				}
 			)
@@ -318,7 +288,8 @@ export default function InventoryPage() {
 			accessorKey: "category",
 			header: "Category",
 			cell: ({ row }) => {
-				const category = row.getValue("category") as Category;
+				const categoryId = row.getValue("category");
+				const category = categories.find((c) => c.id === categoryId);
 				return category?.name || "NULL";
 			},
 		},
